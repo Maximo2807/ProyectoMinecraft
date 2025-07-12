@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # Servicio del Frontend (La página web que ves)
+  frontend:
+    build: ./frontend
+    container_name: minecraft-panel-frontend
+    ports:
+      - "8080:80" # Accede a la web en http://localhost:8080
+    depends_on:
+      - backend
+
+  # Servicio del Backend (El cerebro que controla todo)
+  backend:
+    build: ./backend
+    container_name: minecraft-panel-backend
+    ports:
+      - "3000:3000" # Expone la API y WebSockets
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - MINECRAFT_CONTAINER_NAME=ProyectoMinecraft
+      - MINECRAFT_RCON_HOST=minecraft-server # Se conecta usando el nombre del servicio
+      - MINECRAFT_RCON_PORT=25575
+      - MINECRAFT_RCON_PASSWORD=6dd8390a60a7e0f7fc38213a
+    depends_on:
+      - minecraft-server
+
+  # Servicio del Servidor de Minecraft
+  minecraft-server:
+    image: itzg/minecraft-server:stable-java21-jdk
+    container_name: ProyectoMinecraft
+    ports:
+      - "25565:25565" # Puerto del juego
+      - "25575:25575" # Puerto RCON
+    environment:
+      EULA: "TRUE"
+      TYPE: "FORGE"
+      VERSION: "1.20.1"
+      FORGE_VERSION: "47.4.3"
+      RCON_PORT: "25575"
+      RCON_PASSWORD: "6dd8390a60a7e0f7fc38213a"
+    volumes:
+      - ./minecraft-data:/data # Guarda los datos del servidor (mundo, mods, etc.) en tu máquina
